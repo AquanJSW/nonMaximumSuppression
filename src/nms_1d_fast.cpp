@@ -28,7 +28,7 @@ unsigned CompPartialMax(unsigned from, unsigned to) {
   return best;
 }
 
-std::shared_ptr<std::vector<unsigned>>
+std::vector<unsigned>
 nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
 
   target = _target;
@@ -37,8 +37,7 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
   // The number of adjacent numbers to be compared at one side.
   unsigned n = _n;
   // Maximum positions.
-  std::shared_ptr<std::vector<unsigned>> ret =
-      std::make_shared<std::vector<unsigned>>();
+  std::vector<unsigned> ret = std::vector<unsigned>();
 //  std::vector<unsigned> ret;
 
   unsigned i = n;
@@ -96,7 +95,7 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
       if ((chkpt <= j - n || target[j] >= pmax[chkpt])
           && (j - n == i || target[j] >= pmax[j - n]))
 //        printf("MaximumAt %d\n", j);
-        ret->push_back(j);
+        ret.push_back(j);
       /**
        * chkpt 是扩展域（新域）的起始点
        *
@@ -128,7 +127,7 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
          */
         if (target[i] > target[j]) {
 //          printf("MaximumAt %d\n", i);
-          ret->push_back(i);
+          ret.push_back(i);
           i = i + n + 1;
           break;
           /**

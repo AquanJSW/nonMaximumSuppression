@@ -4,7 +4,6 @@
 #include "vector"
 #include "random"
 #include "nms_1d_fast.h"
-#include "opencv2/core.hpp"
 
 int main(int argc, char **argv) {
   // Parse arguments
@@ -34,7 +33,7 @@ int main(int argc, char **argv) {
     target.push_back(ud(e));
 
   // Start test.
-  std::shared_ptr<std::vector<unsigned>> idxes;
+  std::vector<unsigned> idxes;
   std::clock_t start;
   std::clock_t end;
   if (args["fast"].as<bool>()) {
@@ -45,7 +44,7 @@ int main(int argc, char **argv) {
 
   // Print indexes.
   std::cout << "Maximum indexes: ";
-  for (auto idx : *idxes)
+  for (auto idx : idxes)
     std::cout << idx << ' ';
   std::cout << std::endl;
 
