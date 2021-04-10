@@ -1,6 +1,9 @@
 #include "cxxopts.hpp"
+#include "ctime"
+#include "memory"
 #include "vector"
 #include "random"
+#include "nms_1d_fast.h"
 #include "opencv2/core.hpp"
 
 int main(int argc, char **argv) {
@@ -31,9 +34,22 @@ int main(int argc, char **argv) {
     target.push_back(ud(e));
 
   // Start test.
+  std::shared_ptr<std::vector<unsigned>> idxes;
+  std::clock_t start;
+  std::clock_t end;
   if (args["fast"].as<bool>()) {
-
+    start = std::clock();
+    idxes = nms_1d_fast(target);
+    end = std::clock();
   }
 
+  // Print indexes.
+  std::cout << "Maximum indexes: ";
+  for (auto idx : *idxes)
+    std::cout << idx << ' ';
+  std::cout << std::endl;
+
+  // Print runtime.
+  std::cout << "Finished in " << end - start << "ms." << std::endl;
   return 0;
 }

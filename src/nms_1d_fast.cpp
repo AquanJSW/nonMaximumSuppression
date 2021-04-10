@@ -6,33 +6,40 @@
 
 #include <cstdio>
 #include "vector"
+#include "memory"
 
 using namespace std;
 
-vector<unsigned> I = {19, 22, 76, 1, 60, 70, 88, 23, 22, 95, 85, 61, 55, 98, 32,
-                      93, 33, 36, 20, 59, 31, 9, 75, 71, 59, 15, 55, 59, 67};
-
-unsigned W = I.size();
-vector<unsigned> pmax(W, 0);
+vector<unsigned> target;
+unsigned W;
+vector<unsigned> pmax;
 
 unsigned CompPartialMax(unsigned from, unsigned to) {
-  pmax[to] = I[to];
+  pmax[to] = target[to];
   unsigned best = to;
   while (to > from) {
-    if (I[--to] <= I[best])
-      pmax[to] = I[best];
+    if (target[--to] <= target[best])
+      pmax[to] = target[best];
     else {
-      pmax[to] = I[to];
+      pmax[to] = target[to];
       best = to;
     }
   }
   return best;
 }
 
-int main() {
+std::shared_ptr<std::vector<unsigned>>
+nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
 
+  target = _target;
+  W = target.size();
+  pmax = vector<unsigned>(W, 0);
   // The number of adjacent numbers to be compared at one side.
-  unsigned n = 3;
+  unsigned n = _n;
+  // Maximum positions.
+  std::shared_ptr<std::vector<unsigned>> ret =
+      std::make_shared<std::vector<unsigned>>();
+//  std::vector<unsigned> ret;
 
   unsigned i = n;
   CompPartialMax(0, i - 1);
@@ -59,7 +66,7 @@ int main() {
      * - i != j：
      *  即 i < j，若扩展域的极大值仍小于 j，then j is its RAF.
      */
-    if (i == j || I[j] > I[k]) {
+    if (i == j || target[j] > target[k]) {
       /**
        * Check if j locate the maximum in its left adjacent field(LAF).
        * 由于断点的存在，对LAF(i.e. [j - n, i - 1]的考察将分两个子域分别进行：
@@ -67,28 +74,29 @@ int main() {
        * - 前段[j - n, chkpt - 1]
        *
        * 首先针对后段
-       * - chkpt <= j - n || I[j] >= pmax[chkpt]
+       * - chkpt <= j - n || target[j] >= pmax[chkpt]
        *  - chkpt <= j - n
        *   j 的左邻域是否包含断点？
-       *  - I[j] >= pmax[chkpt]
-       *   若包含，则先将 [chkpt, i - 1] 中的极大值与 I[j] 对比
+       *  - target[j] >= pmax[chkpt]
+       *   若包含，则先将 [chkpt, i - 1] 中的极大值与 target[j] 对比
        *
        * 然后针对前段
-       * - j - n == i || I[j] >= pmax[j - n]:
+       * - j - n == i || target[j] >= pmax[j - n]:
        *  Cause j ∈ [i, i + n]:
        *  - j < i + n:
        *   The maximum in field [j - n, i - 1], which is pmax[j - n],
        *   (注意这里的pmax[j - n]实际针对的是 [j - n, chkpt - 1],
        *   如果 chkpt != -1 的话)
-       *   hasn't been compared with I[j] yet, if I[j] is still the larger
-       *   one, maximum is found, i.e. I[j].
+       *   hasn't been compared with target[j] yet, if target[j] is still the larger
+       *   one, maximum is found, i.e. target[j].
        *  - j == i + n:
        *   Now, j's left adjacent field is equals to i's right adjacent
        *   field, which has already been checked in j's definition.
        */
-      if ((chkpt <= j - n || I[j] >= pmax[chkpt])
-          && (j - n == i || I[j] >= pmax[j - n]))
-        printf("MaximumAt %d\n", j);
+      if ((chkpt <= j - n || target[j] >= pmax[chkpt])
+          && (j - n == i || target[j] >= pmax[j - n]))
+//        printf("MaximumAt %d\n", j);
+        ret->push_back(j);
       /**
        * chkpt 是扩展域（新域）的起始点
        *
@@ -100,7 +108,7 @@ int main() {
         chkpt = i + n + 1;
       i = j + n + 1;
       /**
-       * 若扩展域中的极大值比 I[j] 更大
+       * 若扩展域中的极大值比 target[j] 更大
        */
     } else {
       /**
@@ -114,12 +122,13 @@ int main() {
       while (i < W - n) {
         j = CompPartialMax(chkpt, i + n);
         /**
-         * 如果极大值在旧域，则找到极大值 I[i]
+         * 如果极大值在旧域，则找到极大值 target[i]
          * 同时，在将 i = i + n + 1 后，下一轮循环需要考虑左邻域，故退出本循环，
          * 返回外层循环
          */
-        if (I[i] > I[j]) {
-          printf("MaximumAt %d\n", i);
+        if (target[i] > target[j]) {
+//          printf("MaximumAt %d\n", i);
+          ret->push_back(i);
           i = i + n + 1;
           break;
           /**
@@ -134,4 +143,5 @@ int main() {
       }
     }
   }
+  return ret;
 }
