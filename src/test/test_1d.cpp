@@ -4,6 +4,7 @@
 #include "vector"
 #include "random"
 #include "nms_1d_fast.h"
+#include "nms_1d.h"
 
 int main(int argc, char **argv) {
   // Parse arguments
@@ -16,6 +17,8 @@ int main(int argc, char **argv) {
       ("r,range", "Random range.",
        cxxopts::value<std::vector<unsigned>>()->default_value("0,100"))
       ("f,fast", "Enable test fast version.")
+      ("n,neighbors", "The number of neighbors one side.",
+       cxxopts::value<unsigned>()->default_value("3"))
       ("h,help", "Print help.");
   auto args = opts.parse(argc, argv);
   if (args.count("help")) {
@@ -38,7 +41,11 @@ int main(int argc, char **argv) {
   std::clock_t end;
   if (args["fast"].as<bool>()) {
     start = std::clock();
-    idxes = nms_1d_fast(target);
+    idxes = nms_1d_fast(target, args["neighbors"].as<unsigned>());
+    end = std::clock();
+  } else {
+    start = std::clock();
+    idxes = nms_1d(target, args["neighbors"].as<unsigned>());
     end = std::clock();
   }
 
@@ -49,6 +56,7 @@ int main(int argc, char **argv) {
   std::cout << std::endl;
 
   // Print runtime.
-  std::cout << "Finished in " << end - start << "ms." << std::endl;
+  std::cout << "Finished in " << end - start << "ms using "
+            << (args["fast"].as<bool>() ? "fast" : "standard") << " method.";
   return 0;
 }

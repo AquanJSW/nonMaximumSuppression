@@ -11,7 +11,7 @@
 using namespace std;
 
 vector<unsigned> target;
-unsigned W;
+unsigned len;
 vector<unsigned> pmax;
 
 unsigned CompPartialMax(unsigned from, unsigned to) {
@@ -32,29 +32,44 @@ std::vector<unsigned>
 nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
 
   target = _target;
-  W = target.size();
-  pmax = vector<unsigned>(W, 0);
+  len = target.size();
+  pmax = vector<unsigned>(len, 0);
   // The number of adjacent numbers to be compared at one side.
   unsigned n = _n;
-  // Maximum positions.
+  // Maximum positions to be returned.
   std::vector<unsigned> ret = std::vector<unsigned>();
-//  std::vector<unsigned> ret;
 
   unsigned i = n;
+  // Compute initial left side's partial-max of initial candidate `i = n`.
   CompPartialMax(0, i - 1);
   int chkpt = -1;
 
-  while (i < W - 2 * n) {
-    /// 在i的右邻域寻找极大值的位置
+  /*
+   * Note:
+   * We evaluate current candidate's right side first, which can be explained
+   * by considering such a case in extreme condition:
+   * Target list is monotonically increasing.
+   * If we check an candidate's left side first in every loop, then these
+   * checks would be nonsense, cause we shall eventually check the right side
+   * and then move forward.
+   */
+  while (i < len - 2 * n) {
+    /*
+     * 在i的右邻域寻找极大值的位置
+     * Note:
+     *   Right search contains candidate, while the left search not.
+     */
     unsigned j = CompPartialMax(i, i + n);
     /**
      * 寻找 j 的右扩展域中极大值的位置
      *
      * Cause j ∈ [i, i + n]
      * 所以第二参数 j + n ∈ [i + n, i + n + n]
-     * - 当取 i + n 时，此时 i = j，pmax也没有改变，k = i + n, 此时用不到 k 值;
-     * - 当取 i + n + 1 时，同上理，用不到 k 值；
-     * - 当取 > i + n + 1 时，相当于在 j 的右邻域的 “扩展域” 寻找极大值的位置;
+     * - 当取 i + n 时，此时 i == j，pmax也没有改变，k = i + n, 此时用不到 k 值;
+     * - 当取 i + n + 1 时，i + 1 == j, pmax[i + n + 1] = target[i + n + 1],
+     *   k == i + n + 1
+     * - 当取 > i + n + 1 时，same as above, 相当于在 j 的右邻域的 “扩展域” 寻找极大
+     *   值的位置;
      */
     unsigned k = CompPartialMax(i + n + 1, j + n);
     /**
@@ -63,7 +78,8 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
      * - i = j:
      *  显然成立;
      * - i != j：
-     *  即 i < j，若扩展域的极大值仍小于 j，then j is its RAF.
+     *  即 i < j，若扩展域的极大值 (at the position of k) 仍小于 the value at the
+     *  position j，then j is the maximum in its RAF.
      */
     if (i == j || target[j] > target[k]) {
       /**
@@ -76,6 +92,7 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
        * - chkpt <= j - n || target[j] >= pmax[chkpt]
        *  - chkpt <= j - n
        *   j 的左邻域是否包含断点？
+       *   If doesn't,
        *  - target[j] >= pmax[chkpt]
        *   若包含，则先将 [chkpt, i - 1] 中的极大值与 target[j] 对比
        *
@@ -92,8 +109,8 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
        *   Now, j's left adjacent field is equals to i's right adjacent
        *   field, which has already been checked in j's definition.
        */
-      if ((chkpt <= j - n || target[j] >= pmax[chkpt])
-          && (j - n == i || target[j] >= pmax[j - n]))
+      if ((chkpt <= j - n || target[j] >= pmax[chkpt])  // right half of LAF
+          && (j - n == i || target[j] >= pmax[j - n]))  // left half of LAF
 //        printf("MaximumAt %d\n", j);
         ret.push_back(j);
       /**
@@ -118,7 +135,7 @@ nms_1d_fast(const std::vector<unsigned> &_target, const unsigned _n) {
        * pmax 在 chkpt 及其之后的数据尚未计算，故当作断点（新域的起始点）
        */
       chkpt = j + n + 1;
-      while (i < W - n) {
+      while (i < len - n) {
         j = CompPartialMax(chkpt, i + n);
         /**
          * 如果极大值在旧域，则找到极大值 target[i]
