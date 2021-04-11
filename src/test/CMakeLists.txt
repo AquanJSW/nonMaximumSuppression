@@ -1,6 +1,8 @@
 add_executable(test_1d test_1d.cpp)
 target_link_libraries(test_1d PRIVATE nms_1d_fast nms_1d)
 
+add_executable(test_2d test_2d.cpp)
+
 enable_testing()
 function(test_1d target seed length range_start range_end enable_fast neighbors)
     if(${enable_fast})
